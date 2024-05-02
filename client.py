@@ -1,25 +1,20 @@
-## Client
-
 import socket
 
+server_address = ('127.0.0.1', 8080)
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-client.connect(('127.0.0.1', 8080))
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.connect(server_address)
 
-while True:
 
-    data = input("Text here: ")
+country = input("Enter country: ")
+city = input("Enter city: ")
+request = f"{country},{city}"
+client_socket.send(request.encode())
 
-    client.send(data.encode())
 
-    if data == 'stop':
-        break
+response = client_socket.recv(1024).decode()
+print("Weather:", response)
 
-    response = client.recv(1024).decode()
-    if not response:
-        print("Server closed the connection.")
-        break
-    print(response)
 
-client.close()
+client_socket.close()

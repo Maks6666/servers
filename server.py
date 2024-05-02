@@ -7,29 +7,49 @@
 # до очікування нового учасника розмови.
 
 import socket
+import json
 
+def write_data(data, file_name):
+    with open(file_name, "w") as file:
+        json.dump(data, file)
+
+def upload_data(file_name):
+    with open(file_name, "r") as file:
+        data = json.load(file)
+    return data
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 server.bind(('127.0.0.1', 8080))
 server.listen(1)
 
-while True:
-    print("Waiting...")
+data = {
+    "Ukraine": {
+        "Kyiv": "Sunny",
+        "Kharkiv": "Cold",
+        "Lviv": "Cloudy"
+    },
 
-    client, address = server.accept()
+    "USA": {
+        "New York": "Rainy",
+        "Los Angeles": "Sunny",
+        "Chicago": "Snowy"
+    }
+
+}
+write_data(data, 'data.json')
+upload_data("data.json")
+
+while True:
+    client_socket, address = server.accept()
     print(f"Connection from {address}")
 
+    request = client_socket.recv(1024).decode()
+    country, city = request.split(",")
 
-    while True:
-        data = client.recv(1024).decode()
-        print(data)
+    if country in data and city in data[country]:
+        response = data[country][city]
+    else:
+        response = "Weather data not available"
 
-        if data == 'stop':
-            break
-
-        response = input("Enter something: ")
-
-        client.send(response.encode())
-
-    client.close()
+    client_socket.send(response.encode())
+    client_socket.close()
